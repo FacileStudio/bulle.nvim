@@ -314,5 +314,53 @@ vim.fn.writefile({ "9999999" }, lonely .. "/plugin")
 local stale, _ = before_shim()
 eq(stale < 400, true, ("a marker with no live process behind it is ignored (%dms)"):format(stale))
 
+io.write("\n-- edits written to the shared default dir are not followed\n")
+
+local shared = tmp .. "/shared-spool"
+vim.fn.mkdir(shared, "p")
+local saved_xdg = vim.env.XDG_RUNTIME_DIR
+vim.env.XDG_RUNTIME_DIR = shared
+vim.env.KORI_NVIM_SPOOL_DIR = nil
+local private = tmp .. "/private-spool"
+vim.fn.mkdir(private, "p")
+local watch_cfg = config.setup({ root = tmp, spool_dir = private })
+local not_seen = 0
+local watch_state = spool.start(watch_cfg, function()
+  not_seen = not_seen + 1
+end)
+
+local stray = vim.json.encode({
+  event = "after_tool_call",
+  tool = "edit_file",
+  input = vim.json.encode({ path = "stray.lua", old = "a", new = "b" }),
+  result = "edited stray.lua",
+  retry = false,
+})
+-- The shim has no KORI_NVIM_SPOOL_DIR, so it writes to the shared default
+-- directory under XDG_RUNTIME_DIR. The plugin watches its own private dir.
+vim.fn.system({ "sh", shim, "emit" }, stray)
+
+local waited = 0
+while not_seen == 0 and waited < 2000 do
+  vim.wait(50)
+  waited = waited + 50
+end
+spool.stop(watch_state)
+
+eq(not_seen, 0, "an edit written to the shared default dir is not followed")
+eq(#spool._list_spools(private), 0, "the private dir stays empty")
+
+vim.env.XDG_RUNTIME_DIR = saved_xdg
+
+io.write("\n-- the default spool directory is per process, not per project\n")
+
+config.reset()
+config.setup({ root = tmp })
+local default_dir = spool.dir(config.get())
+eq(default_dir:find(tostring(vim.uv.os_getpid()), 1, true) ~= nil, true,
+  ("the default spool dir names this process: %s"):format(default_dir))
+eq(default_dir:find("kori-nvim", 1, true) ~= nil, true,
+  ("the default spool dir is under a kori-nvim name: %s"):format(default_dir))
+
 io.write(("\n%d checks, %d failures\n"):format(checks, failures))
 os.exit(failures == 0 and 0 or 1)

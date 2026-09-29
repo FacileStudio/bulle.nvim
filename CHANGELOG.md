@@ -4,6 +4,18 @@ All notable changes to kori.nvim. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-09-29
+
+### Fixed
+
+- The plugin followed edits from every kori session in the project, not just
+  the one running in its own pane. The hook shim keys its spool file by
+  `pwd | cksum`, so all sessions writing in the same tree landed in one file,
+  and the plugin watched the whole directory. The default spool directory is
+  now named for this Neovim process, so a kori started outside Neovim writes
+  where this plugin cannot see it. The pane's own kori is unaffected: it still
+  gets `$KORI_NVIM_SPOOL_DIR` set to a private directory.
+
 ## [0.2.0] - 2026-09-24
 
 ### Added

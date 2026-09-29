@@ -54,7 +54,7 @@ The first hook reports an edit after it landed. The second is what lets the plug
 
 `on:` takes one event per entry, so this is two entries rather than one. Both blocks are verified against kori's own config loader. kori asks before running a hook it has not seen in a project before; that prompt is per repo.
 
-The shim writes one JSON line per edit into `$XDG_RUNTIME_DIR/kori-nvim/`, which the plugin tails. That directory is `0700` and the files are `0600`, because the payload carries the text of the file kori edited. The plugin deletes it on startup, so it does not outlive the session. While it is watching, the plugin also leaves a `plugin` file there holding its pid; that is how the `before` shim knows whether anyone is there to answer.
+The shim writes one JSON line per edit into a spool directory, which the plugin tails. When the pane runs kori it sets `$KORI_NVIM_SPOOL_DIR` to a directory of its own, so the spool is `0700`, its files are `0600` (the payload carries the text of the file kori edited), and the plugin wipes it on startup so it does not outlive the session. While it is watching, the plugin also leaves a `plugin` file there holding its pid; that is how the `before` shim knows whether anyone is there to answer. A kori run outside Neovim has no such variable and writes into a shared default directory that no plugin watches by default, so its edits are not followed and its spool is left behind harmlessly.
 
 Check it with `:checkhealth kori` if nothing happens. It reports a missing `before_tool_call` hook, since edits still land without one, just without line numbers for files you had not opened.
 
@@ -112,7 +112,7 @@ require("kori").statusline()  -- "kori ◑ 3", or "" when kori changed nothing
 require("kori").setup({
   enabled = true,
   root = nil,          -- project root; defaults to the cwd
-  spool_dir = nil,     -- where the shim writes; defaults to $XDG_RUNTIME_DIR/kori-nvim
+  spool_dir = nil,     -- where the shim writes; defaults to a per-process dir
   follow = "off",      -- "off" | "peek" | "open"
   keymaps = true,      -- never overrides a mapping you already have
   notify = true,       -- progress notifications; warnings and errors are never silenced
@@ -140,7 +140,7 @@ Set `vim.g.kori_nvim_no_defaults = true` before the plugin loads to skip the aut
 
 ```
 kori runs edit_file
-  └─ hook: after_tool_call ──▶ kori-nvim emit ──▶ $XDG_RUNTIME_DIR/kori-nvim/<key>.ndjson
+  └─ hook: after_tool_call ──▶ kori-nvim emit ──▶ $KORI_NVIM_SPOOL_DIR/<key>.ndjson
                                                           │
                                      fs_event on the directory
                                                           ▼

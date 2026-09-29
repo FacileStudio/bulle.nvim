@@ -12,8 +12,11 @@
 # parser would be a second implementation of the JSON decoder for no gain.
 #
 # The spool carries the text of files kori edited, so it is created 0700 and
-# every file in it is 0600. It lives in $XDG_RUNTIME_DIR and is wiped by the
-# plugin on startup, so it does not outlive the session.
+# every file in it is 0600. When $KORI_NVIM_SPOOL_DIR is set, the plugin owns
+# that directory: it wipes it on startup and watches it, so the spool does not
+# outlive the session. Without that variable the shim falls back to a shared
+# default directory that no plugin watches by default, so a kori run outside
+# Neovim leaves its spool behind harmlessly.
 #
 # Exit status is always 0. A hook that fails on after_tool_call cannot undo the
 # call, and a non-zero exit would report a broken hook for a disk-full or a
