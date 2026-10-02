@@ -1,23 +1,23 @@
 local M = {}
 
-local accept = require("kori.accept")
-local approval = require("kori.approval")
-local config = require("kori.config")
-local context = require("kori.context")
-local edit = require("kori.edit")
-local ide = require("kori.ide")
-local keymaps = require("kori.keymaps")
-local marks = require("kori.marks")
-local notify = require("kori.notify")
-local pane = require("kori.pane")
-local revert = require("kori.revert")
-local spool = require("kori.spool")
-local ui = require("kori.ui")
+local accept = require("bulle.accept")
+local approval = require("bulle.approval")
+local config = require("bulle.config")
+local context = require("bulle.context")
+local edit = require("bulle.edit")
+local ide = require("bulle.ide")
+local keymaps = require("bulle.keymaps")
+local marks = require("bulle.marks")
+local notify = require("bulle.notify")
+local pane = require("bulle.pane")
+local revert = require("bulle.revert")
+local spool = require("bulle.spool")
+local ui = require("bulle.ui")
 
 local runtime = { spool = nil, client = nil, session = nil, turn = nil, tool = nil, autocmds = {} }
 
 local function warn(msg)
-  vim.notify("kori.nvim: " .. msg, vim.log.levels.WARN)
+  vim.notify("bulle.nvim: " .. msg, vim.log.levels.WARN)
 end
 
 local function tell(msg)
@@ -25,7 +25,7 @@ local function tell(msg)
   if not (cfg.notify and cfg.notifications.enabled) then
     return
   end
-  vim.notify("kori.nvim: " .. msg, vim.log.levels.INFO)
+  vim.notify("bulle.nvim: " .. msg, vim.log.levels.INFO)
 end
 
 local function fire(pattern, data)
@@ -36,7 +36,7 @@ local function peek_here()
   local path = context.path()
   local entry = path ~= "" and marks.of(path) or nil
   if not entry or #entry.ranges == 0 then
-    vim.notify("kori.nvim: no kori edits in this buffer", vim.log.levels.INFO)
+    vim.notify("bulle.nvim: no bulle edits in this buffer", vim.log.levels.INFO)
     return
   end
   ui.peek(path, entry.ranges)
@@ -50,7 +50,7 @@ local function revert_here()
   end
   local ok, reason = revert.buffer(0, path)
   if ok then
-    vim.notify("kori.nvim: reverted the edit here", vim.log.levels.INFO)
+    vim.notify("bulle.nvim: reverted the edit here", vim.log.levels.INFO)
   else
     warn(tostring(reason))
   end
@@ -62,12 +62,12 @@ end
 
 local function send(prompt, whole)
   if not attached() then
-    warn("no kori session is attached, start one with :KoriToggle")
+    warn("no bulle session is attached, start one with :BulleToggle")
     return
   end
   local text = prompt
   if not text or text == "" then
-    vim.ui.input({ prompt = "kori: " }, function(typed)
+    vim.ui.input({ prompt = "bulle: " }, function(typed)
       if typed and typed ~= "" then
         runtime.client:send_prompt(context.payload(typed, whole))
       end
@@ -78,7 +78,7 @@ local function send(prompt, whole)
 end
 
 local function no_session()
-  warn("no kori session is attached, start one with :KoriToggle")
+  warn("no bulle session is attached, start one with :BulleToggle")
   return false
 end
 
@@ -88,7 +88,7 @@ local function open_here()
   end
   local path = context.path()
   if path == "" then
-    warn("this buffer has no file to show in kori")
+    warn("this buffer has no file to show in bulle")
     return false
   end
   return runtime.client:send_open({ path = path, line = vim.fn.line(".") })
@@ -131,7 +131,7 @@ end
 --- put in front of the user as a real dialog, error is reported loudly, and
 --- tool updates the runtime and fires `User KoriTool`, which is what a
 --- statusline plugin listens to. Nothing is dropped: an event type the
---- protocol adds later is ignored by kori.ide before it ever reaches here.
+--- protocol adds later is ignored by bulle.ide before it ever reaches here.
 --- @param ev table one decoded session event
 --- @return nil
 local function on_ide_event(ev)
@@ -141,7 +141,7 @@ local function on_ide_event(ev)
     local version = ev.version and (" " .. ev.version) or ""
     local model = ev.model and (" (" .. ev.model .. ")") or ""
     fire("KoriHello", ev)
-    tell("attached to kori" .. version .. model)
+    tell("attached to bulle" .. version .. model)
     return
   end
   if kind == "turn" then
@@ -157,7 +157,7 @@ local function on_ide_event(ev)
     end
     local result = edit.apply_remote(ev.path, ranges, { tool = ev.tool })
     if not result then
-      warn(("kori changed %s, which could not be read"):format(tostring(ev.path)))
+      warn(("bulle changed %s, which could not be read"):format(tostring(ev.path)))
       return
     end
     accept.edit(result)
@@ -184,7 +184,7 @@ local function on_ide_event(ev)
   end
   if kind == "error" then
     vim.notify(
-      ("kori.nvim: the session reported an error: %s"):format(ev.reason or "unknown"),
+      ("bulle.nvim: the session reported an error: %s"):format(ev.reason or "unknown"),
       vim.log.levels.ERROR
     )
   end
@@ -226,7 +226,7 @@ end
 local function watch_spool(cfg)
   local state, err = spool.start(cfg, on_spool_event)
   if err then
-    vim.notify("kori.nvim: " .. err, vim.log.levels.ERROR)
+    vim.notify("bulle.nvim: " .. err, vim.log.levels.ERROR)
     return
   end
   runtime.spool = state
@@ -266,23 +266,23 @@ local function attach()
   else
     attach_ide(cfg)
   end
-  tell("looking for a kori session")
+  tell("looking for a bulle session")
   return true
 end
 
---- Stop reconnecting and drop the socket, leaving the pane and kori alone.
+--- Stop reconnecting and drop the socket, leaving the pane and bulle alone.
 --- @return boolean detached
 local function detach()
   if not runtime.client then
-    warn("no kori session is attached")
+    warn("no bulle session is attached")
     return false
   end
   runtime.client:stop()
-  tell("detached; kori keeps running")
+  tell("detached; bulle keeps running")
   return true
 end
 
---- Configure the plugin and start watching for kori's edits.
+--- Configure the plugin and start watching for bulle's edits.
 --- @param opts table|nil options, merged over the defaults
 --- @return table the effective configuration
 function M.setup(opts)
@@ -300,7 +300,7 @@ function M.setup(opts)
 
   runtime.autocmds[#runtime.autocmds + 1] = vim.api.nvim_create_autocmd("BufReadPost", {
     callback = accept.refresh_current_buffer,
-    desc = "kori: reapply edit marks",
+    desc = "bulle: reapply edit marks",
   })
 
   if not cfg.enabled then
@@ -312,7 +312,7 @@ function M.setup(opts)
   return cfg
 end
 
---- Show the files and hunks kori changed.
+--- Show the files and hunks bulle changed.
 --- @return nil
 function M.changes()
   ui.changes()
@@ -357,7 +357,7 @@ function M.detach()
   return detach()
 end
 
---- Revert the kori edit under the cursor.
+--- Revert the bulle edit under the cursor.
 --- @return boolean reverted, string|nil reason
 function M.revert()
   return revert.buffer(0, context.path())
@@ -369,21 +369,21 @@ function M.connected()
   return attached()
 end
 
---- A statusline fragment describing kori's recent edits.
+--- A statusline fragment describing bulle's recent edits.
 --- @return string
 function M.statusline()
   return ui.status()
 end
 
 --- Open the chat pane.
---- @param cmd table|nil command and arguments, defaulting to kori
+--- @param cmd table|nil command and arguments, defaulting to bulle
 --- @return boolean opened
 function M.start(cmd)
   return pane.start(cmd)
 end
 
 --- Open the pane if closed, close it if open.
---- @param cmd table|nil command and arguments, defaulting to kori
+--- @param cmd table|nil command and arguments, defaulting to bulle
 --- @return boolean open afterwards
 function M.toggle(cmd)
   return pane.toggle(cmd)
@@ -401,7 +401,7 @@ function M.is_open()
   return pane.is_open()
 end
 
---- Close the pane window, leaving kori running.
+--- Close the pane window, leaving bulle running.
 --- @return boolean closed
 function M.hide()
   return pane.hide()

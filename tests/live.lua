@@ -6,8 +6,8 @@
 local root = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p:h:h")
 vim.opt.runtimepath:prepend(root)
 
-local config = require("kori.config")
-local spool = require("kori.spool")
+local config = require("bulle.config")
+local spool = require("bulle.spool")
 
 local tmp = vim.fn.tempname()
 vim.fn.mkdir(tmp, "p")
@@ -27,7 +27,7 @@ local payload = vim.json.encode({
   result = "edited sample.lua",
   retry = false,
 })
-vim.fn.system({ "sh", root .. "/bin/kori-nvim", "emit" }, payload)
+vim.fn.system({ "sh", root .. "/bin/bulle-nvim", "emit" }, payload)
 
 local waited = 0
 while #seen == 0 and waited < 3000 do

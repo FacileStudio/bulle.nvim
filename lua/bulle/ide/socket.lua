@@ -1,13 +1,13 @@
---- Unix socket transport for the kori IDE protocol.
+--- Unix socket transport for the bulle IDE protocol.
 --- It owns the pipe, the newline framing, the session lookup and the bounded
 --- backoff that reconnects when the socket drops. Message semantics live in
---- kori.ide, not here.
+--- bulle.ide, not here.
 
 local M = {}
 
 local uv = vim.uv or vim.loop
-local frame = require("kori.ide.frame")
-local discover = require("kori.ide.discover")
+local frame = require("bulle.ide.frame")
+local discover = require("bulle.ide.discover")
 
 local RETRY_MIN = 250
 local RETRY_MAX = 8000
@@ -119,8 +119,8 @@ function Transport._attempt(self, loud)
   end
   local entry = discover.find(self.root, self.dir)
   if not entry then
-    fail(self, loud, "no kori session found")
-    return false, "no kori session found"
+    fail(self, loud, "no bulle session found")
+    return false, "no bulle session found"
   end
   local sock = uv.new_pipe(false)
   if not sock then

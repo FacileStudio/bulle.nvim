@@ -1,4 +1,4 @@
---- NDJSON framing for the kori IDE socket.
+--- NDJSON framing for the bulle IDE socket.
 --- Turns a byte stream into complete lines and decodes each one, so a line
 --- split across two reads is never decoded early and a partial tail is kept
 --- for the next chunk.

@@ -6,21 +6,21 @@ function M.dir(cfg)
   if cfg.spool_dir then
     return cfg.spool_dir
   end
-  -- The default directory is per Neovim process, not per project. Every kori
+  -- The default directory is per Neovim process, not per project. Every bulle
   -- session working in the same tree would otherwise write into one shared
   -- spool file (the shim keys by `pwd | cksum`), and this plugin would follow
   -- edits from sessions that have nothing to do with the pane it opened. A
-  -- directory named for this process is watched by nobody else, so a kori
+  -- directory named for this process is watched by nobody else, so a bulle
   -- started outside Neovim writes where this plugin cannot see it.
   local xdg = vim.env.XDG_RUNTIME_DIR
   if xdg and xdg ~= "" then
-    return ("%s/kori-nvim-%d"):format(xdg, uv.os_getpid())
+    return ("%s/bulle-nvim-%d"):format(xdg, uv.os_getpid())
   end
   local tmp = vim.env.TMPDIR
   if not tmp or tmp == "" then
     tmp = "/tmp"
   end
-  return ("%s/kori-nvim-%d-%d"):format(tmp, uv.os_getuid(), uv.os_getpid())
+  return ("%s/bulle-nvim-%d-%d"):format(tmp, uv.os_getuid(), uv.os_getpid())
 end
 
 local function mkdir(path)
@@ -68,7 +68,7 @@ local function decode(chunk, on_event, on_bad)
   local ok2, err = pcall(on_event, payload)
   if not ok2 then
     vim.schedule(function()
-      vim.notify("kori.nvim: " .. tostring(err), vim.log.levels.ERROR)
+      vim.notify("bulle.nvim: " .. tostring(err), vim.log.levels.ERROR)
     end)
   end
 end
@@ -144,7 +144,7 @@ end
 
 --- Answer one before_tool_call request: take the snapshot, then remove the file
 --- the shim is waiting on. The order matters, and is the whole point of the
---- handshake: the shim returns to kori, and the tool runs, only once the file
+--- handshake: the shim returns to bulle, and the tool runs, only once the file
 --- has been read.
 local function serve(path, on_event, on_bad)
   local data = read_from(path, 0)

@@ -1,14 +1,14 @@
---- Editor side client for the kori IDE socket.
+--- Editor side client for the bulle IDE socket.
 --- It decodes the session's events, dispatches them to the caller's handler and
 --- sends hello, send, open, approve and stop back. Discovery, framing and the
---- reconnection backoff live in kori.ide.socket.
+--- reconnection backoff live in bulle.ide.socket.
 --- Options are injected at setup; the module never reads a global config.
 
 local M = {}
 
 local uv = vim.uv or vim.loop
-local frame = require("kori.ide.frame")
-local socket = require("kori.ide.socket")
+local frame = require("bulle.ide.frame")
+local socket = require("bulle.ide.socket")
 
 local VERSION = 1
 
@@ -175,10 +175,10 @@ function M.setup(opts)
   return client
 end
 
---- The default discovery directory, ~/.kori/ide.
+--- The default discovery directory, ~/.bulle/ide.
 --- @return string path
 function M.dir()
-  return require("kori.ide.discover").dir()
+  return require("bulle.ide.discover").dir()
 end
 
 return M

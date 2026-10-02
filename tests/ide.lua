@@ -2,9 +2,9 @@ local root = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p:h:h")
 vim.opt.runtimepath:prepend(root)
 
 local uv = vim.uv or vim.loop
-local discover = require("kori.ide.discover")
-local frame = require("kori.ide.frame")
-local ide = require("kori.ide")
+local discover = require("bulle.ide.discover")
+local frame = require("bulle.ide.frame")
+local ide = require("bulle.ide")
 
 local failures = 0
 local checks = 0
@@ -56,7 +56,7 @@ end
 local function fixture()
   local base = vim.fn.tempname()
   local dir = base .. "/ide"
-  local sock = base .. "/kori.sock"
+  local sock = base .. "/bulle.sock"
   entry(dir, "1.json", sock, base)
   return base, dir, sock
 end
@@ -135,7 +135,7 @@ local lonely = ide.setup({
   end,
 })
 eq(lonely:connect(), false, "connect fails when no session is filed")
-eq(lonely.last_error, "no kori session found", "the failure keeps its reason")
+eq(lonely.last_error, "no bulle session found", "the failure keeps its reason")
 eq(wait(function() return states[#states] == "error" end), true, "an explicit connect reports the failure as an error")
 
 io.write("\n-- connect, handshake and dispatch\n")
@@ -398,13 +398,13 @@ shutdown(srv6)
 
 io.write("\n-- the approval surface shows the input verbatim, and fails closed\n")
 
-local approval = require("kori.approval")
+local approval = require("bulle.approval")
 
 local raw = '{\n  "command": "rm -rf ./build",\n  "cwd": "/tmp"\n}'
 local shown = approval.body({ tool = "run_command", input = raw })
 eq(table.concat(shown, "\n"):find(raw, 1, true) ~= nil, true, "the raw input appears whole, newlines and all")
 eq(shown[4], '  "command": "rm -rf ./build",', "the input's own indentation is the indentation shown")
-eq(shown[1], "kori wants to run run_command", "the surface names the tool")
+eq(shown[1], "bulle wants to run run_command", "the surface names the tool")
 eq(shown[#shown], "Approve it once?", "the surface asks for a decision")
 
 local notices, fired = {}, {}
@@ -505,10 +505,10 @@ for _, name in ipairs({ "KoriHello", "KoriTurn", "KoriTool", "KoriEdit", "KoriDo
   })
 end
 
-local kori = require("kori")
-local config = require("kori.config")
-local marks = require("kori.marks")
-kori.setup({
+local bulle = require("bulle")
+local config = require("bulle.config")
+local marks = require("bulle.marks")
+bulle.setup({
   root = base7,
   spool_dir = base7 .. "/spool",
   keymaps = false,
@@ -521,20 +521,20 @@ eq(back7[1].v, 1, "the handshake carries v 1")
 eq(back7[1].root, root7, "the handshake carries the root the plugin is working in")
 
 say(srv7, { v = 1, t = "hello", pid = 7, root = base7, session = base7 .. "/s.jsonl", model = "opus", version = "0.76.0" })
-eq(wait(function() return kori._runtime().session ~= nil end), true, "the session hello is recorded")
-eq(kori._runtime().session.model, "opus", "the model is kept for :KoriStatus")
-eq(kori._runtime().session.version, "0.76.0", "the version is kept too")
-eq(notice("attached to kori 0.76.0 (opus)"), true, "attaching is announced to the user")
+eq(wait(function() return bulle._runtime().session ~= nil end), true, "the session hello is recorded")
+eq(bulle._runtime().session.model, "opus", "the model is kept for :KoriStatus")
+eq(bulle._runtime().session.version, "0.76.0", "the version is kept too")
+eq(notice("attached to bulle 0.76.0 (opus)"), true, "attaching is announced to the user")
 eq(listed("KoriHello"), true, "User KoriHello fires")
 
 say(srv7, { v = 1, t = "turn", n = 2 })
-eq(wait(function() return kori._runtime().turn == 2 end), true, "the turn is recorded")
+eq(wait(function() return bulle._runtime().turn == 2 end), true, "the turn is recorded")
 eq(notice("turn 2 started"), true, "the turn is announced, not dropped")
 eq(listed("KoriTurn"), true, "User KoriTurn fires")
 
 say(srv7, { v = 1, t = "tool", id = "t9", name = "bash", status = "start", path = "a.lua" })
-eq(wait(function() return kori._runtime().tool ~= nil end), true, "the tool is recorded")
-eq(kori._runtime().tool.name, "bash", "the tool name is kept for :KoriStatus")
+eq(wait(function() return bulle._runtime().tool ~= nil end), true, "the tool is recorded")
+eq(bulle._runtime().tool.name, "bash", "the tool name is kept for :KoriStatus")
 eq(listed("KoriTool"), true, "User KoriTool fires")
 
 local edited = base7 .. "/edited.lua"
@@ -575,31 +575,31 @@ eq(notice("run finished (end_turn)"), true, "the end of the run is announced")
 
 vim.cmd("edit " .. vim.fn.fnameescape(edited))
 vim.api.nvim_win_set_cursor(0, { 2, 0 })
-eq(kori.open(), true, ":KoriOpen reaches the session")
+eq(bulle.open(), true, ":KoriOpen reaches the session")
 eq(wait(function() return #sent7("open") >= 1 end), true, "the open arrives")
 eq(sent7("open")[1].path, edited, "the open carries the buffer's path")
 eq(sent7("open")[1].line, 2, "the open carries the cursor's line")
 
-eq(kori.cancel(), true, ":KoriCancel reaches the session")
+eq(bulle.cancel(), true, ":KoriCancel reaches the session")
 eq(wait(function() return #sent7("stop") >= 1 end), true, "the cancel arrives as a stop")
 
-kori.send("look at this")
+bulle.send("look at this")
 eq(wait(function() return #sent7("send") >= 1 end), true, "a prompt reaches the session")
 eq(sent7("send")[1].text:sub(1, 12), "look at this", "the prompt text is carried")
 eq(sent7("send")[1].path, edited, "the prompt carries the file as context")
 eq(sent7("send")[1].line, 2, "the prompt carries the line as context")
 eq(type(sent7("send")[1].branch), "string", "the prompt carries a branch field")
 
-eq(kori.detach(), true, ":KoriDetach stops the attachment")
-eq(kori.connected(), false, "detaching drops the socket")
-eq(kori.attach(), true, ":KoriAttach resumes looking")
-eq(wait(function() return kori.connected() end), true, "attaching reconnects to the session")
+eq(bulle.detach(), true, ":KoriDetach stops the attachment")
+eq(bulle.connected(), false, "detaching drops the socket")
+eq(bulle.attach(), true, ":KoriAttach resumes looking")
+eq(wait(function() return bulle.connected() end), true, "attaching reconnects to the session")
 eq(wait(function() return #srv7.conns >= 2 end), true, "and it took a fresh connection")
 
 local progress = #notices
 config.setup({ notify = false })
 say(srv7, { v = 1, t = "turn", n = 9 })
-eq(wait(function() return kori._runtime().turn == 9 end), true, "a turn is recorded even with notifications off")
+eq(wait(function() return bulle._runtime().turn == 9 end), true, "a turn is recorded even with notifications off")
 vim.wait(80)
 eq(#notices, progress, "a progress notification is suppressed by notify = false")
 
@@ -608,7 +608,7 @@ eq(wait(function() return notice("the session gave up") end), true, "a protocol 
 eq(level_of("the session gave up"), vim.log.levels.ERROR, "a session error is reported at ERROR level")
 config.setup({ notify = true })
 
-kori.detach()
+bulle.detach()
 vim.notify = real_notify
 shutdown(srv7)
 

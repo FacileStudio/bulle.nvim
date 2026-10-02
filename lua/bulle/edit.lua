@@ -1,8 +1,8 @@
 local M = {}
 
-local cmdedit = require("kori.cmdedit")
-local config = require("kori.config")
-local marks = require("kori.marks")
+local cmdedit = require("bulle.cmdedit")
+local config = require("bulle.config")
+local marks = require("bulle.marks")
 
 local snapshots = {}
 
@@ -170,7 +170,7 @@ end
 --- previous snapshot or the payload's old/new text is the base, and the spans
 --- are diffed out of it as before. A buffer holding unsaved changes is never
 --- reloaded and carries no marks while it disagrees with disk.
---- @param path string absolute path of the file kori changed
+--- @param path string absolute path of the file bulle changed
 --- @param meta table|nil { tool, old, new, ranges } describing the change
 --- @return table|nil { path, ranges, stale, had_buffer }, nil when unreadable
 function M.apply_path(path, meta)
@@ -201,7 +201,7 @@ end
 
 --- Apply a change to an explicit path, with an optional caller-supplied span.
 ---
---- The IDE socket calls this when kori itself reports what it changed, so the
+--- The IDE socket calls this when bulle itself reports what it changed, so the
 --- caller knows the lines and they are used verbatim instead of being diffed.
 --- Ranges are optional: without them the buffer/disk diff is the fallback, as
 --- for a hook event. A path that does not exist or cannot be read is not

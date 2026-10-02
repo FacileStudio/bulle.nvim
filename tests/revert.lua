@@ -58,10 +58,10 @@ local function buf_text()
   return text(vim.api.nvim_buf_get_lines(0, 0, -1, false))
 end
 
-local config = require("kori.config")
-local edit = require("kori.edit")
-local marks = require("kori.marks")
-local revert = require("kori.revert")
+local config = require("bulle.config")
+local edit = require("bulle.edit")
+local marks = require("bulle.marks")
+local revert = require("bulle.revert")
 
 local tmp = vim.fn.tempname()
 vim.fn.mkdir(tmp, "p")
@@ -120,7 +120,7 @@ local dirty_ok, dirty_reason = revert.hunk(dirty_file, dirty_entry.ranges[1], di
 refused(dirty_ok, dirty_reason, "a modified buffer is refused")
 eq(bytes(dirty_file), before, "the file is byte-identical after the refusal")
 
-io.write("\n-- a file that lost kori's text is refused\n")
+io.write("\n-- a file that lost bulle's text is refused\n")
 
 local lost_file = tmp .. "/lost.lua"
 vim.fn.writefile({ "keep", "target", "keep" }, lost_file)

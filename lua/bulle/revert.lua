@@ -1,7 +1,7 @@
 local M = {}
 
-local marks = require("kori.marks")
-local edit = require("kori.edit")
+local marks = require("bulle.marks")
+local edit = require("bulle.edit")
 
 local function key(path)
   return vim.fn.fnamemodify(path, ":p")
@@ -70,13 +70,13 @@ end
 
 local function guard(path, meta)
   if type(meta) ~= "table" or type(meta.old) ~= "string" or type(meta.new) ~= "string" then
-    return nil, "kori recorded no old and new text for this edit"
+    return nil, "bulle recorded no old and new text for this edit"
   end
   if meta.new == "" then
-    return nil, "kori recorded no new text to locate"
+    return nil, "bulle recorded no new text to locate"
   end
   if meta.old == meta.new then
-    return nil, "kori recorded no change to revert"
+    return nil, "bulle recorded no change to revert"
   end
   local buf = buf_for(path)
   if buf and vim.api.nvim_get_option_value("modified", { buf = buf }) then
@@ -89,10 +89,10 @@ local function guard(path, meta)
   local text = join(lines)
   local positions = occurrences(text, meta.new)
   if #positions == 0 then
-    return nil, ("%s no longer contains the text kori wrote"):format(label(path))
+    return nil, ("%s no longer contains the text bulle wrote"):format(label(path))
   end
   if #positions > 1 then
-    return nil, ("%s holds the text kori wrote in %d places, refusing"):format(label(path), #positions)
+    return nil, ("%s holds the text bulle wrote in %d places, refusing"):format(label(path), #positions)
   end
   return { buf = buf, lines = lines, text = text, at = positions[1] }
 end
@@ -153,7 +153,7 @@ local function splice(lines, from, to, block)
   return out
 end
 
---- Revert one hunk, restoring the old text kori replaced.
+--- Revert one hunk, restoring the old text bulle replaced.
 --- @param path string file path
 --- @param range table hunk with first and last line numbers
 --- @param meta table recorded entry meta with old and new text
@@ -181,7 +181,7 @@ function M.hunk(path, range, meta)
     end
   end
   if not target then
-    return false, "the hunk under the cursor is not one kori recorded"
+    return false, "the hunk under the cursor is not one bulle recorded"
   end
   local at = offset + target.first
   local to = target.added == 0 and at - 1 or offset + target.last
@@ -214,7 +214,7 @@ function M.buffer(buf, path)
   path = key(path)
   local entry = marks.of(path)
   if not entry or #entry.ranges == 0 then
-    return false, ("no kori edit is recorded for %s"):format(label(path))
+    return false, ("no bulle edit is recorded for %s"):format(label(path))
   end
   local win = vim.fn.win_findbuf(buf)[1]
   if not win then
@@ -226,7 +226,7 @@ function M.buffer(buf, path)
       return M.hunk(path, range, entry.meta)
     end
   end
-  return false, "the cursor is not on a kori edit"
+  return false, "the cursor is not on a bulle edit"
 end
 
 --- Revert every hunk recorded for a file in one reverse edit.
@@ -237,7 +237,7 @@ function M.all(path)
   path = key(path)
   local entry = marks.of(path)
   if not entry then
-    return 0, ("no kori edit is recorded for %s"):format(label(path))
+    return 0, ("no bulle edit is recorded for %s"):format(label(path))
   end
   if #entry.ranges == 0 then
     return 0, ("no hunks are recorded for %s"):format(label(path))

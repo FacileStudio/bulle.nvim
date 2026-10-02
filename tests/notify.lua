@@ -34,7 +34,7 @@ local function shown(message, label)
   fail(label, ("%s was never shown, saw %s"):format(vim.inspect(message), vim.inspect(seen)))
 end
 
-local notify = require("kori.notify")
+local notify = require("bulle.notify")
 
 local tmp = vim.fn.tempname()
 vim.fn.mkdir(tmp, "p")
@@ -91,7 +91,7 @@ await(1)
 eq(#seen, 1, "ten edits produce exactly one notification")
 eq(
   seen[1].message,
-  "kori changed a.lua (10 places, 20 lines, +10 -10)",
+  "bulle changed a.lua (10 places, 20 lines, +10 -10)",
   "the summary sums the burst and reports the final line count"
 )
 eq(seen[1].level, vim.log.levels.INFO, "the summary is informational")
@@ -107,8 +107,8 @@ notify.record(a, { { first = 5, last = 5, added = 1, removed = 1 } })
 eq(#notify._pending(), 2, "two files are pending")
 await(2)
 eq(#seen, 2, "each file gets one notification, whichever window closes first")
-shown("kori changed a.lua (2 places, 20 lines, +3 -1)", "the first file sums only its own edits")
-shown("kori changed b.lua (line 2, 5 lines, +1 -3)", "the second file keeps its own count")
+shown("bulle changed a.lua (2 places, 20 lines, +3 -1)", "the first file sums only its own edits")
+shown("bulle changed b.lua (line 2, 5 lines, +1 -3)", "the second file keeps its own count")
 
 io.write("\n-- a burst that outruns the window is still one notification\n")
 
@@ -121,7 +121,7 @@ for _ = 1, 5 do
 end
 await(1)
 eq(#seen, 1, "edits spaced inside the window are still one notification")
-eq(seen[1].message, "kori changed a.lua (5 places, 20 lines, +5 -0)", "the last edit of the burst is reported")
+eq(seen[1].message, "bulle changed a.lua (5 places, 20 lines, +5 -0)", "the last edit of the burst is reported")
 
 io.write("\n-- flush delivers immediately\n")
 
@@ -130,7 +130,7 @@ notify.record(a, { { first = 4, last = 4, added = 1, removed = 2 } })
 eq(#seen, 0, "the summary waits for the window")
 eq(notify.flush(), 1, "flush reports one delivery")
 eq(#seen, 1, "flush shows it straight away")
-eq(seen[1].message, "kori changed a.lua (line 4, 20 lines, +1 -2)", "flush uses the same summary")
+eq(seen[1].message, "bulle changed a.lua (line 4, 20 lines, +1 -2)", "flush uses the same summary")
 eq(#notify._pending(), 0, "flush leaves nothing pending")
 settle()
 eq(#seen, 1, "the timer flush replaced never fires again")
@@ -174,7 +174,7 @@ notify.cancel()
 
 notify.record(gone, line)
 eq(notify.flush(), 1, "an edit of a file that vanished is still delivered")
-eq(seen[1].message, "kori changed gone.lua (line 3, +1 -1)", "without a file on disk the line count is left out")
+eq(seen[1].message, "bulle changed gone.lua (line 3, +1 -1)", "without a file on disk the line count is left out")
 
 local ok, err = pcall(notify.setup, { window_ms = -1 })
 eq(ok, false, "a negative window is rejected")

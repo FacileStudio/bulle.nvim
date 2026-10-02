@@ -1,6 +1,6 @@
 --- Which files a shell command edits in place.
 ---
---- Ported from kori's internal/diff/cmdpath.go, which is the authority on which
+--- Ported from bulle's internal/diff/cmdpath.go, which is the authority on which
 --- commands count. The markers are "sed -i", "awk -i" and "perl -i", matched as
 --- plain substrings and tried in that order, so a command carrying several of
 --- them is attributed to the earliest marker in the list, not to the earliest

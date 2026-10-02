@@ -88,7 +88,7 @@ function M.setup(opts)
   end
   local ok, err = validate(current)
   if not ok then
-    error("kori.nvim: " .. err, 2)
+    error("bulle.nvim: " .. err, 2)
   end
   if current.root == nil then
     current.root = vim.fn.getcwd()

@@ -1,4 +1,4 @@
---- An approval surface for the kori IDE protocol.
+--- An approval surface for the bulle IDE protocol.
 ---
 --- Anything that renders an approval is a security boundary, so this module
 --- follows the protocol's rules literally. The tool's own input is shown
@@ -31,7 +31,7 @@ function M.body(ev)
   if type(input) ~= "string" then
     input = input == nil and "" or vim.json.encode(input)
   end
-  local lines = { ("kori wants to run %s"):format(ev.tool or "a tool"), "" }
+  local lines = { ("bulle wants to run %s"):format(ev.tool or "a tool"), "" }
   for _, line in ipairs(vim.split(input, "\n", { plain = true })) do
     lines[#lines + 1] = line
   end
@@ -48,7 +48,7 @@ local function show(lines)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
   vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = buf })
-  vim.api.nvim_set_option_value("filetype", "kori", { buf = buf })
+  vim.api.nvim_set_option_value("filetype", "bulle", { buf = buf })
   vim.cmd("botright split")
   local win = vim.api.nvim_get_current_win()
   vim.api.nvim_win_set_buf(win, buf)
@@ -87,7 +87,7 @@ function M.handle(ev, reply)
   local sent, delivered = pcall(reply, ev.id, allow)
   if not sent or delivered == false then
     vim.notify(
-      "kori.nvim: the approval answer could not be sent; the session will deny it",
+      "bulle.nvim: the approval answer could not be sent; the session will deny it",
       vim.log.levels.WARN
     )
   end

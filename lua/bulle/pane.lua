@@ -1,11 +1,11 @@
 local M = {}
 
-local config = require("kori.config")
-local spool = require("kori.spool")
+local config = require("bulle.config")
+local spool = require("bulle.spool")
 
 local state = { pane = nil }
 
---- The kori process the pane runs, or nil when there never was one.
+--- The bulle process the pane runs, or nil when there never was one.
 --- @return table|nil pane with buf and win
 function M.state()
   return state.pane
@@ -67,7 +67,7 @@ local function spawn(cfg, argv)
     return nil, ("could not run %s"):format(table.concat(argv, " "))
   end
 
-  vim.api.nvim_set_option_value("filetype", "kori", { buf = buf })
+  vim.api.nvim_set_option_value("filetype", "bulle", { buf = buf })
   state.pane = { win = win, buf = buf }
   vim.cmd("startinsert")
   vim.api.nvim_exec_autocmds("User", { pattern = "KoriPaneOpened", data = { buf = buf, win = win } })
@@ -115,7 +115,7 @@ function M.is_open()
   return #pane_windows() > 0
 end
 
---- Close the pane window, leaving kori running. Refuses to close the last one.
+--- Close the pane window, leaving bulle running. Refuses to close the last one.
 --- @return boolean closed
 function M.hide()
   local wins = pane_windows()
@@ -123,7 +123,7 @@ function M.hide()
     return false
   end
   if #wins >= #vim.api.nvim_tabpage_list_wins(0) then
-    vim.notify("kori.nvim: refusing to close the last window", vim.log.levels.WARN)
+    vim.notify("bulle.nvim: refusing to close the last window", vim.log.levels.WARN)
     return false
   end
   for _, win in ipairs(wins) do
@@ -133,8 +133,8 @@ function M.hide()
   return true
 end
 
---- Open the chat pane, reusing a live kori rather than starting a second one.
---- @param cmd table|nil command and arguments, defaulting to kori
+--- Open the chat pane, reusing a live bulle rather than starting a second one.
+--- @param cmd table|nil command and arguments, defaulting to bulle
 --- @return boolean opened
 function M.start(cmd)
   local cfg = config.get()
@@ -161,19 +161,19 @@ function M.start(cmd)
 
   local argv = cmd
   if not argv or #argv == 0 then
-    argv = { "kori" }
+    argv = { "bulle" }
   end
 
   local _, err = spawn(cfg, argv)
   if err then
-    vim.notify("kori.nvim: " .. err, vim.log.levels.ERROR)
+    vim.notify("bulle.nvim: " .. err, vim.log.levels.ERROR)
     return false
   end
   return true
 end
 
 --- Open the pane if it is closed, close it if it is open.
---- @param cmd table|nil command and arguments, defaulting to kori
+--- @param cmd table|nil command and arguments, defaulting to bulle
 --- @return boolean open afterwards
 function M.toggle(cmd)
   if M.is_open() then

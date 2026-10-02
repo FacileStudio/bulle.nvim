@@ -1,9 +1,9 @@
 local M = {}
 
-local config = require("kori.config")
-local marks = require("kori.marks")
-local notify = require("kori.notify")
-local pane = require("kori.pane")
+local config = require("bulle.config")
+local marks = require("bulle.marks")
+local notify = require("bulle.notify")
+local pane = require("bulle.pane")
 
 local function display(path)
   local root = config.get().root
@@ -13,8 +13,8 @@ local function display(path)
   return vim.fn.fnamemodify(path, ":~")
 end
 
---- Queue kori's edit notification for a path, coalesced by `kori.notify`.
---- @param path string absolute path of the file kori edited
+--- Queue bulle's edit notification for a path, coalesced by `bulle.notify`.
+--- @param path string absolute path of the file bulle edited
 --- @param ranges table list of `{ first, last, added, removed }` from one edit event
 --- @return boolean true when the edit was queued
 function M.notify(path, ranges)
@@ -53,7 +53,7 @@ function M.peek(path, ranges)
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, body)
   vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
-  vim.api.nvim_set_option_value("filetype", "kori", { buf = buf })
+  vim.api.nvim_set_option_value("filetype", "bulle", { buf = buf })
   local width = 0
   for _, line in ipairs(body) do
     width = math.max(width, vim.fn.strdisplaywidth(line))
@@ -260,7 +260,7 @@ function M.changes()
     end
   end
   if #entries == 0 then
-    vim.notify("kori.nvim: no edits recorded", vim.log.levels.INFO)
+    vim.notify("bulle.nvim: no edits recorded", vim.log.levels.INFO)
     return
   end
   table.sort(entries, function(a, b)
@@ -299,7 +299,7 @@ function M.changes()
   vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
   vim.api.nvim_set_option_value("buftype", "nofile", { buf = buf })
   vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = buf })
-  vim.api.nvim_set_option_value("filetype", "kori", { buf = buf })
+  vim.api.nvim_set_option_value("filetype", "bulle", { buf = buf })
 
   local function open_selected()
     local row = vim.api.nvim_win_get_cursor(win)[1]
@@ -315,12 +315,12 @@ function M.changes()
     vim.cmd("normal! zz")
   end
 
-  vim.keymap.set("n", "<CR>", open_selected, { buffer = buf, desc = "kori: open file at first edit" })
+  vim.keymap.set("n", "<CR>", open_selected, { buffer = buf, desc = "bulle: open file at first edit" })
   vim.keymap.set("n", "q", function()
     if panel and vim.api.nvim_win_is_valid(panel.win) then
       vim.api.nvim_win_close(panel.win, true)
     end
-  end, { buffer = buf, desc = "kori: close" })
+  end, { buffer = buf, desc = "bulle: close" })
 end
 
 function M.status()
@@ -341,7 +341,7 @@ function M.status()
     return ""
   end
   local dot = recent and "\u{25d1}" or "\u{25cf}"
-  return ("kori %s %d"):format(dot, ranges)
+  return ("bulle %s %d"):format(dot, ranges)
 end
 
 return M

@@ -46,10 +46,10 @@ local function summary(path, entry)
   local where = #entry.ranges == 1 and ("line " .. entry.ranges[1].first) or (#entry.ranges .. " places")
   local count = lines_of(path)
   if not count then
-    return ("kori changed %s (%s, +%d -%d)"):format(display(path), where, added, removed)
+    return ("bulle changed %s (%s, +%d -%d)"):format(display(path), where, added, removed)
   end
   local noun = count == 1 and "line" or "lines"
-  return ("kori changed %s (%s, %d %s, +%d -%d)"):format(display(path), where, count, noun, added, removed)
+  return ("bulle changed %s (%s, %d %s, +%d -%d)"):format(display(path), where, count, noun, added, removed)
 end
 
 local function emit(message, level)
@@ -122,7 +122,7 @@ function M.setup(opts)
   opts = opts or {}
   local why = refused(opts)
   if why then
-    error("kori.notify: " .. why, 2)
+    error("bulle.notify: " .. why, 2)
   end
   for key, value in pairs(opts) do
     if accepted[key] then
@@ -137,7 +137,7 @@ function M.setup(opts)
 end
 
 --- Queue an edit for a path, coalescing it with whatever is already pending for that file.
---- @param path string absolute path of the file kori edited
+--- @param path string absolute path of the file bulle edited
 --- @param ranges table list of `{ first, last, added, removed }` from one edit event
 --- @return boolean true when the edit was queued, false when it was refused
 function M.record(path, ranges)

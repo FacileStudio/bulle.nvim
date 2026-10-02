@@ -1,6 +1,6 @@
 local M = {}
 
-local ns = vim.api.nvim_create_namespace("kori.nvim")
+local ns = vim.api.nvim_create_namespace("bulle.nvim")
 
 M.state = {}
 

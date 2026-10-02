@@ -31,10 +31,10 @@ local function shape(ranges)
   return table.concat(out, ",")
 end
 
-local config = require("kori.config")
-local edit = require("kori.edit")
-local marks = require("kori.marks")
-local spool = require("kori.spool")
+local config = require("bulle.config")
+local edit = require("bulle.edit")
+local marks = require("bulle.marks")
+local spool = require("bulle.spool")
 
 local tmp = vim.fn.tempname()
 vim.fn.mkdir(tmp, "p")
@@ -141,7 +141,7 @@ vim.fn.writefile({ "one", "two" }, made)
 eq(
   shape(after("write_file", { path = made, content = "one\ntwo\n" }).ranges),
   "1-2+2-0",
-  "a file kori created marks every line as added"
+  "a file bulle created marks every line as added"
 )
 
 local replaced = tmp .. "/replaced.lua"
@@ -189,12 +189,12 @@ eq(
   "local c = 3",
   "the buffer was not reloaded"
 )
-local modified_marks = vim.api.nvim_buf_get_extmarks(0, vim.api.nvim_create_namespace("kori.nvim"), 0, -1, {})
+local modified_marks = vim.api.nvim_buf_get_extmarks(0, vim.api.nvim_create_namespace("bulle.nvim"), 0, -1, {})
 eq(#modified_marks, 0, "no marks are drawn in a buffer that disagrees with disk")
 
 io.write("\n-- the shim end to end\n")
 
-local shim = root .. "/bin/kori-nvim"
+local shim = root .. "/bin/bulle-nvim"
 eq(vim.fn.filereadable(shim), 1, "the shim exists")
 
 local spool_dir = tmp .. "/shim-spool"
@@ -359,8 +359,8 @@ config.setup({ root = tmp })
 local default_dir = spool.dir(config.get())
 eq(default_dir:find(tostring(vim.uv.os_getpid()), 1, true) ~= nil, true,
   ("the default spool dir names this process: %s"):format(default_dir))
-eq(default_dir:find("kori-nvim", 1, true) ~= nil, true,
-  ("the default spool dir is under a kori-nvim name: %s"):format(default_dir))
+eq(default_dir:find("bulle-nvim", 1, true) ~= nil, true,
+  ("the default spool dir is under a bulle-nvim name: %s"):format(default_dir))
 
 io.write(("\n%d checks, %d failures\n"):format(checks, failures))
 os.exit(failures == 0 and 0 or 1)

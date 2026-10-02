@@ -1,9 +1,9 @@
 local M = {}
 
-local config = require("kori.config")
-local marks = require("kori.marks")
-local notify = require("kori.notify")
-local ui = require("kori.ui")
+local config = require("bulle.config")
+local marks = require("bulle.marks")
+local notify = require("bulle.notify")
+local ui = require("bulle.ui")
 
 --- Find the loaded buffer showing a path, if there is one.
 --- @param path string absolute path
@@ -40,7 +40,7 @@ function M.edit(result)
   end
   if result.stale then
     vim.notify(
-      ("kori changed %s, but the buffer has unsaved changes"):format(vim.fn.fnamemodify(result.path, ":t")),
+      ("bulle changed %s, but the buffer has unsaved changes"):format(vim.fn.fnamemodify(result.path, ":t")),
       vim.log.levels.WARN
     )
     return false
@@ -53,7 +53,7 @@ end
 
 --- Report that a tool call started or finished, so a statusline can show it.
 --- Fired for every tool event, whatever `statusline` says: the option decides
---- whether kori contributes a statusline fragment, not whether the session's
+--- whether bulle contributes a statusline fragment, not whether the session's
 --- progress reaches you.
 --- @param ev table tool event with name and status
 --- @return nil

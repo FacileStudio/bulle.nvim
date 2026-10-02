@@ -34,10 +34,10 @@ local function shape(ranges)
   return table.concat(out, ",")
 end
 
-local cmdedit = require("kori.cmdedit")
-local config = require("kori.config")
-local edit = require("kori.edit")
-local marks = require("kori.marks")
+local cmdedit = require("bulle.cmdedit")
+local config = require("bulle.config")
+local edit = require("bulle.edit")
+local marks = require("bulle.marks")
 
 local tmp = vim.fn.tempname()
 vim.fn.mkdir(tmp, "p")

@@ -32,9 +32,9 @@ end
 local tmp = vim.fn.tempname()
 vim.fn.mkdir(tmp, "p")
 
-local config = require("kori.config")
+local config = require("bulle.config")
 config.setup({ root = tmp, spool_dir = tmp .. "/spool", keymaps = false })
-local kori = require("kori")
+local bulle = require("bulle")
 
 local slow = { "sh", "-c", "sleep 60" }
 
@@ -81,7 +81,7 @@ local function close_all_but(keep)
 end
 
 local function pane_buffer()
-  local runtime = kori._runtime()
+  local runtime = bulle._runtime()
   return runtime.pane and runtime.pane.buf
 end
 
@@ -114,7 +114,7 @@ vim.fn.writefile({ "local a = 1", "local b = 2" }, file)
 vim.cmd("edit " .. vim.fn.fnameescape(file))
 local editor_buf = vim.api.nvim_get_current_buf()
 
-eq(kori.toggle(slow), true, "the first toggle opens the pane")
+eq(bulle.toggle(slow), true, "the first toggle opens the pane")
 eq(#windows(), 2, "exactly one window was added")
 eq(#terminals(), 1, "exactly one terminal exists")
 eq(vim.api.nvim_get_option_value("buftype", { buf = editor_buf }), "", "the edited buffer is still a file")
@@ -131,36 +131,36 @@ eq(shown_by(pane_buf), 1, "the pane buffer is shown in exactly one window")
 
 io.write("\n-- toggling again hides it and comes back\n")
 
-eq(kori.toggle(slow), false, "the second toggle closes the pane")
+eq(bulle.toggle(slow), false, "the second toggle closes the pane")
 eq(#windows(), 1, "the editor window is alone again")
-eq(kori.is_open(), false, "the pane reports closed")
+eq(bulle.is_open(), false, "the pane reports closed")
 eq(vim.api.nvim_buf_is_valid(pane_buf), true, "hiding keeps the pane buffer alive")
-eq(running(pane_buf), true, "hiding keeps kori running, it is a toggle and not a restart")
+eq(running(pane_buf), true, "hiding keeps bulle running, it is a toggle and not a restart")
 
-eq(kori.toggle(slow), true, "toggling back reopens it")
+eq(bulle.toggle(slow), true, "toggling back reopens it")
 eq(#windows(), 2, "still one window added")
-eq(pane_buffer(), pane_buf, "the same kori process was reused")
+eq(pane_buffer(), pane_buf, "the same bulle process was reused")
 eq(#terminals(), 1, "still exactly one terminal")
 
 io.write("\n-- toggling ten times does not stack panes\n")
 
 for _ = 1, 10 do
-  kori.toggle(slow)
+  bulle.toggle(slow)
 end
-eq(kori.is_open(), true, "the last toggle left it open")
+eq(bulle.is_open(), true, "the last toggle left it open")
 eq(#terminals(), 1, "never more than one terminal")
 eq(#windows(), 2, "never more than two windows")
 
 io.write("\n-- starting when already open does not duplicate\n")
 
 local before = #windows()
-kori.start(slow)
+bulle.start(slow)
 eq(#windows(), before, "start() on an open pane changes nothing")
 eq(#terminals(), 1, "start() on an open pane adds no terminal")
 
 io.write("\n-- from a dashboard-like scratch buffer\n")
 
-kori.toggle(slow)
+bulle.toggle(slow)
 close_all_but(nil)
 vim.cmd("enew")
 vim.api.nvim_set_option_value("buftype", "nofile", { buf = 0 })
@@ -169,7 +169,7 @@ vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = 0 })
 local dashboard = vim.api.nvim_get_current_buf()
 eq(#windows(), 1, "the dashboard is alone")
 
-eq(kori.toggle(slow), true, "the pane opens from the dashboard buffer")
+eq(bulle.toggle(slow), true, "the pane opens from the dashboard buffer")
 eq(
   vim.api.nvim_get_option_value("buftype", { buf = dashboard }),
   "nofile",
@@ -186,12 +186,12 @@ eq(#windows(), 2, "the dashboard kept its own window")
 
 io.write("\n-- the pane is not closed while it is the only window\n")
 
-local pane_win = kori.pane()
+local pane_win = bulle.pane()
 close_all_but(pane_win)
 eq(#windows(), 1, "only the pane is left")
-kori.toggle(slow)
+bulle.toggle(slow)
 eq(#windows(), 1, "the toggle refused to close the last window")
-eq(kori.is_open(), true, "the pane is still open")
+eq(bulle.is_open(), true, "the pane is still open")
 
 io.write("\n-- a dead process is replaced rather than shown as a corpse\n")
 
@@ -201,17 +201,17 @@ wait_for_death(dead, 3000)
 eq(running(dead), false, "the pane process has exited")
 
 vim.cmd("botright vnew")
-eq(kori.start(slow), true, "start() replaces a pane whose process exited")
+eq(bulle.start(slow), true, "start() replaces a pane whose process exited")
 eq(pane_buffer() ~= dead, true, "a finished process is not reused")
 eq(#terminals(), 1, "the replacement did not leave the old one behind")
 
 io.write("\n-- start() recovers when the dead pane is the only window\n")
 
 local old = pane_buffer()
-close_all_but(kori.pane())
+close_all_but(bulle.pane())
 vim.fn.jobstop(channel_of(old))
 wait_for_death(old, 3000)
-eq(kori.start(slow), true, "start() works from the last remaining window")
+eq(bulle.start(slow), true, "start() works from the last remaining window")
 eq(#windows() >= 2, true, "a window survived to hold the new pane")
 eq(pane_buffer() ~= old, true, "the dead pane was replaced here too")
 
@@ -222,14 +222,14 @@ if doomed then
   vim.fn.jobstop(channel_of(doomed))
   wait_for_death(doomed, 3000)
 end
-kori.hide()
+bulle.hide()
 local windows_before = #windows()
 
-local threw, reported = pcall(kori.start, { "/nonexistent/kori-binary" })
+local threw, reported = pcall(bulle.start, { "/nonexistent/bulle-binary" })
 eq(threw, true, "a bad command does not throw at the caller")
 eq(reported, false, "a bad command reports failure instead")
 eq(#windows(), windows_before, "the failed attempt left no window behind")
-eq(kori.is_open(), false, "a failed start leaves no pane behind")
+eq(bulle.is_open(), false, "a failed start leaves no pane behind")
 
 io.write(("\n%d checks, %d failures\n"):format(checks, failures))
 os.exit(failures == 0 and 0 or 1)

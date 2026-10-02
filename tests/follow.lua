@@ -36,11 +36,11 @@ vim.o.lines = 50
 local tmp = vim.fn.tempname()
 vim.fn.mkdir(tmp, "p")
 
-local config = require("kori.config")
+local config = require("bulle.config")
 config.setup({ root = tmp, spool_dir = tmp .. "/spool", follow = "open", keymaps = false })
-local kori = require("kori")
-local ui = require("kori.ui")
-local accept = require("kori.accept")
+local bulle = require("bulle")
+local ui = require("bulle.ui")
+local accept = require("bulle.accept")
 
 local ranges = { { first = 2, last = 2, added = 1, removed = 1 } }
 
@@ -150,9 +150,9 @@ io.write("\n-- the followed file carries its marks\n")
 
 reset()
 local six = write(tmp .. "/six.lua", { "local v = 1", "local w = 2" })
-require("kori.marks").record(six, ranges, { tool = "edit_file", old = "local w = 1", new = "local w = 2" })
+require("bulle.marks").record(six, ranges, { tool = "edit_file", old = "local w = 1", new = "local w = 2" })
 eq(ui.open(six, ranges, buffer_for(six)), true, "the edit is followed")
-local namespace = vim.api.nvim_create_namespace("kori.nvim")
+local namespace = vim.api.nvim_create_namespace("bulle.nvim")
 eq(
   #vim.api.nvim_buf_get_extmarks(accept.buffer_for(six), namespace, 0, -1, {}),
   1,
@@ -162,8 +162,8 @@ eq(
 io.write("\n-- the pane is open, and the file is new\n")
 
 reset()
-eq(kori.toggle({ "sh", "-c", "sleep 60" }), true, "the pane opened from a scratch buffer")
-local pane_win = kori.pane()
+eq(bulle.toggle({ "sh", "-c", "sleep 60" }), true, "the pane opened from a scratch buffer")
+local pane_win = bulle.pane()
 local pane_width = vim.api.nvim_win_get_width(pane_win)
 eq(pane_width, 80, "the pane took the configured width")
 
@@ -177,7 +177,7 @@ eq(ui.open(three, ranges, buffer_for(three)), true, "the edit is followed from t
 eq(tabs(), follow_tabs, "no tab was opened")
 eq(windows(), follow_windows + 1, "one window was added beside the pane")
 eq(vim.api.nvim_win_get_width(pane_win), pane_width, "the chat pane kept its width")
-eq(kori.is_open(), true, "the pane is still open")
+eq(bulle.is_open(), true, "the pane is still open")
 eq(vim.api.nvim_get_current_win(), pane_win, "the cursor stayed in the pane while typing")
 eq(window_of(three) ~= pane_win, true, "the file got a window of its own")
 eq(vim.api.nvim_win_get_cursor(window_of(three))[1], 2, "the file is scrolled to the first change")
@@ -211,7 +211,7 @@ eq(name_of(vim.api.nvim_get_current_buf()), "two.lua", "the edited file is on sc
 io.write("\n-- the pane is in another tab\n")
 
 vim.cmd("tabnew")
-eq(kori.pane(), nil, "the pane is not in this tab")
+eq(bulle.pane(), nil, "the pane is not in this tab")
 local elsewhere = windows()
 local five = write(tmp .. "/five.lua", { "local t = 1", "local u = 2" })
 
@@ -222,7 +222,7 @@ typing = false
 
 eq(ui.open(five, ranges, buffer_for(five)), true, "it opens once you are not typing")
 eq(name_of(vim.api.nvim_get_current_buf()), "five.lua", "the edited file is on screen")
-eq(kori.is_open(), true, "the tab holding the pane was reached, and the chat is there")
+eq(bulle.is_open(), true, "the tab holding the pane was reached, and the chat is there")
 
 io.write(("\n%d checks, %d failures\n"):format(checks, failures))
 os.exit(failures == 0 and 0 or 1)

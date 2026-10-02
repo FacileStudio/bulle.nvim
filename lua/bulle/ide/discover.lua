@@ -1,5 +1,5 @@
---- Discovery of running kori sessions from the per process files written under
---- ~/.kori/ide. A file whose pid is dead is ignored but never deleted, since the
+--- Discovery of running bulle sessions from the per process files written under
+--- ~/.bulle/ide. A file whose pid is dead is ignored but never deleted, since the
 --- owner may still be starting up.
 
 local M = {}
@@ -21,7 +21,7 @@ function M.dir()
   if not home or home == "" then
     home = vim.fn.expand("~")
   end
-  return home .. "/.kori/ide"
+  return home .. "/.bulle/ide"
 end
 
 --- Whether a pid is still running.
