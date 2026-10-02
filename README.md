@@ -1,15 +1,15 @@
-# kori.nvim
+# bulle.nvim
 
-Neovim integration for [kori](https://github.com/FacileStudio/kori), the terminal coding agent.
+Neovim integration for [bulle](https://github.com/FacileStudio/bulle), the terminal coding agent.
 
-Run kori in a pane beside your code, and see what it changed in the buffer you are already editing. Files reload when kori writes them, edits are marked in place, and you step through them with `]r` / `[r` without leaving the editor.
+Run bulle in a pane beside your code, and see what it changed in the buffer you are already editing. Files reload when bulle writes them, edits are marked in place, and you step through them with `]r` / `[r` without leaving the editor.
 
-The cursor is never moved for you by default. kori tells you it changed something and marks where; jumping there is your keypress, or an opt-in mode.
+The cursor is never moved for you by default. bulle tells you it changed something and marks where; jumping there is your keypress, or an opt-in mode.
 
 ## Requirements
 
 - Neovim 0.10 or newer
-- kori 0.76 or newer on `$PATH`
+- bulle 0.76 or newer on `$PATH`
 
 ## Install
 
@@ -17,7 +17,7 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ```lua
 {
-  "FacileStudio/kori.nvim",
+  "FacileStudio/bulle.nvim",
   opts = {},
 }
 ```
@@ -25,83 +25,83 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 Or clone it and put the directory on your `runtimepath`. The hook shim has to be on `$PATH`:
 
 ```sh
-ln -s "$PWD/bin/kori-nvim" ~/.local/bin/kori-nvim
+ln -s "$PWD/bin/bulle-nvim" ~/.local/bin/bulle-nvim
 ```
 
-## The kori hook
+## The bulle hook
 
-No kori release offers a socket yet, so the plugin learns about edits the way kori already lets anything learn about them: hooks. Add both of these to `~/.kori.yml`, or to a project's `.kori.yml`:
+No bulle release offers a socket yet, so the plugin learns about edits the way bulle already lets anything learn about them: hooks. Add both of these to `~/.bulle.yml`, or to a project's `.bulle.yml`:
 
 ```yaml
 hooks:
-  - name: kori.nvim
+  - name: bulle.nvim
     on: after_tool_call
     match: [edit_file, write_file, run_command]
-    run: kori-nvim emit
+    run: bulle-nvim emit
     timeout: 2s
     async: true
-  - name: kori.nvim
+  - name: bulle.nvim
     on: before_tool_call
     match: [edit_file, write_file, run_command]
-    run: kori-nvim before
+    run: bulle-nvim before
     timeout: 2s
     async: false
 ```
 
-`run_command` is in the list because a shell command can edit a file in place, and the plugin ports kori's own parser for those commands. Leave it out and only `edit_file` and `write_file` are reported.
+`run_command` is in the list because a shell command can edit a file in place, and the plugin ports bulle's own parser for those commands. Leave it out and only `edit_file` and `write_file` are reported.
 
-The first hook reports an edit after it landed. The second is what lets the plugin say which lines changed in a file you never opened in Neovim: `write_file` and `run_command` report no old text, so without a copy of the file taken beforehand there is nothing to compare against. `kori-nvim before` hands the plugin the paths the tool is about to touch and waits for it to read them, so the tool cannot overwrite the file first. That is why it is `async: false`: an async hook would let the tool run before the copy was taken, which is the whole thing it is there to prevent. The wait is bounded, and skipped entirely when no Neovim is watching, so it costs a few milliseconds per editing call and nothing at all when you run kori without Neovim open.
+The first hook reports an edit after it landed. The second is what lets the plugin say which lines changed in a file you never opened in Neovim: `write_file` and `run_command` report no old text, so without a copy of the file taken beforehand there is nothing to compare against. `bulle-nvim before` hands the plugin the paths the tool is about to touch and waits for it to read them, so the tool cannot overwrite the file first. That is why it is `async: false`: an async hook would let the tool run before the copy was taken, which is the whole thing it is there to prevent. The wait is bounded, and skipped entirely when no Neovim is watching, so it costs a few milliseconds per editing call and nothing at all when you run bulle without Neovim open.
 
-`on:` takes one event per entry, so this is two entries rather than one. Both blocks are verified against kori's own config loader. kori asks before running a hook it has not seen in a project before; that prompt is per repo.
+`on:` takes one event per entry, so this is two entries rather than one. Both blocks are verified against bulle's own config loader. bulle asks before running a hook it has not seen in a project before; that prompt is per repo.
 
-The shim writes one JSON line per edit into a spool directory, which the plugin tails. When the pane runs kori it sets `$KORI_NVIM_SPOOL_DIR` to a directory of its own, so the spool is `0700`, its files are `0600` (the payload carries the text of the file kori edited), and the plugin wipes it on startup so it does not outlive the session. While it is watching, the plugin also leaves a `plugin` file there holding its pid; that is how the `before` shim knows whether anyone is there to answer. A kori run outside Neovim has no such variable and writes into a shared default directory that no plugin watches by default, so its edits are not followed and its spool is left behind harmlessly.
+The shim writes one JSON line per edit into a spool directory, which the plugin tails. When the pane runs bulle it sets `$BULLE_NVIM_SPOOL_DIR` to a directory of its own, so the spool is `0700`, its files are `0600` (the payload carries the text of the file bulle edited), and the plugin wipes it on startup so it does not outlive the session. While it is watching, the plugin also leaves a `plugin` file there holding its pid; that is how the `before` shim knows whether anyone is there to answer. A bulle run outside Neovim has no such variable and writes into a shared default directory that no plugin watches by default, so its edits are not followed and its spool is left behind harmlessly.
 
-Check it with `:checkhealth kori` if nothing happens. It reports a missing `before_tool_call` hook, since edits still land without one, just without line numbers for files you had not opened.
+Check it with `:checkhealth bulle` if nothing happens. It reports a missing `before_tool_call` hook, since edits still land without one, just without line numbers for files you had not opened.
 
 ## What you get
 
 | Mapping | Command | What it does |
 |---|---|---|
-| `]r` | | next edit kori made in this buffer |
+| `]r` | | next edit bulle made in this buffer |
 | `[r` | | previous edit |
-| `<leader>ko` | `:KoriToggle` | toggle the chat pane: a right-hand split running kori |
-| `<leader>kc` | `:KoriChanges` | every file and hunk kori changed, `⏎` opens at the first hunk |
-| `<leader>kp` | `:KoriPeek` | float showing the last edit with context, without taking focus |
-| `<leader>kr` | `:KoriRevert` | revert the kori edit under the cursor |
-| | `:KoriRevertAll` | revert every kori edit in this file |
-| | `:KoriStart [cmd]` | open the pane, optionally running something other than kori |
-| | `:KoriClear` | forget every recorded edit |
-| | `:KoriStatus` | report the pane, the session, the root, and the last turn and tool |
-| | `:KoriHealth` | health check |
-| `<leader>ks` | `:KoriSend [text]` | send the selection and context to the session |
-| | `:KoriAsk [text]` | send the whole buffer and context to the session |
-| | `:KoriOpen` | ask the session to scroll its own view to this line |
-| | `:KoriCancel` | cancel the run in progress |
-| | `:KoriAttach` | attach to a session over the IDE socket, or resume looking |
-| | `:KoriDetach` | stop reconnecting and drop the IDE socket, leaving the pane alone |
+| `<leader>ko` | `:BulleToggle` | toggle the chat pane: a right-hand split running bulle |
+| `<leader>kc` | `:BulleChanges` | every file and hunk bulle changed, `⏎` opens at the first hunk |
+| `<leader>kp` | `:BullePeek` | float showing the last edit with context, without taking focus |
+| `<leader>kr` | `:BulleRevert` | revert the bulle edit under the cursor |
+| | `:BulleRevertAll` | revert every bulle edit in this file |
+| | `:BulleStart [cmd]` | open the pane, optionally running something other than bulle |
+| | `:BulleClear` | forget every recorded edit |
+| | `:BulleStatus` | report the pane, the session, the root, and the last turn and tool |
+| | `:BulleHealth` | health check |
+| `<leader>ks` | `:BulleSend [text]` | send the selection and context to the session |
+| | `:BulleAsk [text]` | send the whole buffer and context to the session |
+| | `:BulleOpen` | ask the session to scroll its own view to this line |
+| | `:BulleCancel` | cancel the run in progress |
+| | `:BulleAttach` | attach to a session over the IDE socket, or resume looking |
+| | `:BulleDetach` | stop reconnecting and drop the IDE socket, leaving the pane alone |
 
-`:KoriSend`, `:KoriAsk`, `:KoriOpen`, `:KoriCancel`, `:KoriAttach` and `:KoriDetach` need kori's IDE socket, which no kori release ships yet: a session serves it only when kori runs with `--ide` or `$KORI_IDE` is set. Each warns instead of silently doing nothing. Reverting, marking and the changes panel do not: they work on the payload kori's hook already delivers.
+`:BulleSend`, `:BulleAsk`, `:BulleOpen`, `:BulleCancel`, `:BulleAttach` and `:BulleDetach` need bulle's IDE socket, which no bulle release ships yet: a session serves it only when bulle runs with `--ide` or `$BULLE_IDE` is set. Each warns instead of silently doing nothing. Reverting, marking and the changes panel do not: they work on the payload bulle's hook already delivers.
 
 When a session is attached, its events reach you without any configuration:
 
 | Event | What you see |
 |---|---|
-| `hello` | a notification naming kori's version and model; the session is remembered for `:KoriStatus` |
-| `turn` | a notification that the turn started; the number shows in `:KoriStatus` |
-| `tool` | `User KoriTool`; the last tool and its status show in `:KoriStatus` |
+| `hello` | a notification naming bulle's version and model; the session is remembered for `:BulleStatus` |
+| `turn` | a notification that the turn started; the number shows in `:BulleStatus` |
+| `tool` | `User BulleTool`; the last tool and its status show in `:BulleStatus` |
 | `edit` | the file reloads and is marked, followed when `follow` says so, as a hook edit is |
 | `approval` | the tool input, verbatim, in a split, with a Yes/No dialog. Only Yes approves |
 | `done` | a notification naming why the run ended |
 | `error` | a notification at error level; the session closes the connection after it |
 
-The same events fire `User KoriHello`, `KoriTurn`, `KoriTool`, `KoriEdit`, `KoriDone` and `KoriStatus` autocmds, so a statusline can drive itself from them. `edit` goes through the same path a hook edit does, so `follow`, `]r` / `[r`, `:KoriChanges` and `:KoriPeek` all apply.
+The same events fire `User BulleHello`, `BulleTurn`, `BulleTool`, `BulleEdit`, `BulleDone` and `BulleStatus` autocmds, so a statusline can drive itself from them. `edit` goes through the same path a hook edit does, so `follow`, `]r` / `[r`, `:BulleChanges` and `:BullePeek` all apply.
 
-The pane opens to the right in its own buffer, so it never takes over the file you are editing, and it works from the dashboard. A followed edit opens beside it rather than over it, so the chat stays on screen while kori works. Toggling it off hides the window but leaves kori running, so toggling back returns to the same session. After kori exits, `:KoriStart` starts a fresh one.
+The pane opens to the right in its own buffer, so it never takes over the file you are editing, and it works from the dashboard. A followed edit opens beside it rather than over it, so the chat stays on screen while bulle works. Toggling it off hides the window but leaves bulle running, so toggling back returns to the same session. After bulle exits, `:BulleStart` starts a fresh one.
 
 Statusline:
 
 ```lua
-require("kori").statusline()  -- "kori ◑ 3", or "" when kori changed nothing
+require("bulle").statusline()  -- "bulle ◑ 3", or "" when bulle changed nothing
 ```
 
 `◑` means an edit landed in the last two seconds, `●` means the session has edits. Attach it to lualine's `lualine_x` or heirline.
@@ -109,7 +109,7 @@ require("kori").statusline()  -- "kori ◑ 3", or "" when kori changed nothing
 ## Configuration
 
 ```lua
-require("kori").setup({
+require("bulle").setup({
   enabled = true,
   root = nil,          -- project root; defaults to the cwd
   spool_dir = nil,     -- where the shim writes; defaults to a per-process dir
@@ -124,7 +124,7 @@ require("kori").setup({
 })
 ```
 
-`ide` controls the client for kori's IDE socket: `dir` overrides the `~/.kori/ide` directory the session files are read from, and the two retry bounds are the backoff floor and ceiling in milliseconds. It reconnects on its own whenever the session goes away, re-running discovery each time, so a kori started after Neovim is still found.
+`ide` controls the client for bulle's IDE socket: `dir` overrides the `~/.bulle/ide` directory the session files are read from, and the two retry bounds are the backoff floor and ceiling in milliseconds. It reconnects on its own whenever the session goes away, re-running discovery each time, so a bulle started after Neovim is still found.
 
 `follow` decides what happens when an edit lands:
 
@@ -132,15 +132,15 @@ require("kori").setup({
 - `"peek"`: a float opens beside your cursor with the changed lines, does not take focus, closes after four seconds.
 - `"open"`: the cursor lands on the first changed line. A file already on screen is reached by moving the cursor there. Anything else opens in a window left of the chat pane when one is open, so the chat stays on screen, and in its own tab when the pane is closed.
 
-Follow never takes the cursor out of a window you are typing in, and chatting with kori counts: while the cursor is in the pane your keystrokes are going there. The file still opens beside the pane, you just keep the cursor. With no pane to put it beside there is nowhere to show the file without interrupting you, so the follow is skipped until you are back in normal mode. A file kori edited that has unsaved changes in a buffer is never followed either.
+Follow never takes the cursor out of a window you are typing in, and chatting with bulle counts: while the cursor is in the pane your keystrokes are going there. The file still opens beside the pane, you just keep the cursor. With no pane to put it beside there is nowhere to show the file without interrupting you, so the follow is skipped until you are back in normal mode. A file bulle edited that has unsaved changes in a buffer is never followed either.
 
-Set `vim.g.kori_nvim_no_defaults = true` before the plugin loads to skip the automatic `setup()` and configure it yourself.
+Set `vim.g.bulle_nvim_no_defaults = true` before the plugin loads to skip the automatic `setup()` and configure it yourself.
 
 ## How it works
 
 ```
-kori runs edit_file
-  └─ hook: after_tool_call ──▶ kori-nvim emit ──▶ $KORI_NVIM_SPOOL_DIR/<key>.ndjson
+bulle runs edit_file
+  └─ hook: after_tool_call ──▶ bulle-nvim emit ──▶ $BULLE_NVIM_SPOOL_DIR/<key>.ndjson
                                                           │
                                      fs_event on the directory
                                                           ▼
@@ -149,24 +149,24 @@ kori runs edit_file
                                     reload, then marks at the changed lines
 ```
 
-The changed lines are not read out of the hook payload. They come from diffing the buffer against the file on disk, which is exact and works for any tool. The payload only says *which file* kori touched.
+The changed lines are not read out of the hook payload. They come from diffing the buffer against the file on disk, which is exact and works for any tool. The payload only says *which file* bulle touched.
 
 Two consequences worth knowing:
 
 - A buffer with unsaved changes is never clobbered, and gets no marks while it disagrees with disk, because line numbers would be wrong. You get a warning naming the file instead; the marks come back when you reload it.
-- A file that is not open in a buffer is recorded in `:KoriChanges` and gets its marks when you open it. A file kori edits twice while closed is diffed from the first edit's content.
+- A file that is not open in a buffer is recorded in `:BulleChanges` and gets its marks when you open it. A file bulle edits twice while closed is diffed from the first edit's content.
 
-What counts as the "before" side of that diff, in order: the buffer, when it is open and agrees with disk; otherwise the copy taken by the `before_tool_call` hook, when there is one; otherwise the old text `edit_file` reports, spliced back into the file's current content. So a file you never opened is diffed against the copy taken just before the tool call, and a file kori creates is diffed against nothing, which reports every line as added. Without the `before` hook the last case still works and the others fall back to the old text, which `write_file` and `run_command` do not carry — that is why the hook is worth adding.
+What counts as the "before" side of that diff, in order: the buffer, when it is open and agrees with disk; otherwise the copy taken by the `before_tool_call` hook, when there is one; otherwise the old text `edit_file` reports, spliced back into the file's current content. So a file you never opened is diffed against the copy taken just before the tool call, and a file bulle creates is diffed against nothing, which reports every line as added. Without the `before` hook the last case still works and the others fall back to the old text, which `write_file` and `run_command` do not carry — that is why the hook is worth adding.
 
-`run_command` edits are covered too, as far as they can be: a shell command does not name the file it wrote, so the plugin parses the in-place edit commands kori itself understands (`sed -i`, `awk -i`, `perl -i`) and takes the path from there. Anything with real shell syntax — a pipe, a redirect, a glob, a variable, a `&&` chain — is refused rather than guessed at, so a command like `sed -i ... f.go 2>/dev/null` is reported as nothing rather than as the wrong file. In practice kori often chains a command to its own follow-up, such as `sed -i ... f.go && cat f.go`, and that is refused too: the marker is real but the command shape no longer proves which file changed.
+`run_command` edits are covered too, as far as they can be: a shell command does not name the file it wrote, so the plugin parses the in-place edit commands bulle itself understands (`sed -i`, `awk -i`, `perl -i`) and takes the path from there. Anything with real shell syntax — a pipe, a redirect, a glob, a variable, a `&&` chain — is refused rather than guessed at, so a command like `sed -i ... f.go 2>/dev/null` is reported as nothing rather than as the wrong file. In practice bulle often chains a command to its own follow-up, such as `sed -i ... f.go && cat f.go`, and that is refused too: the marker is real but the command shape no longer proves which file changed.
 
 ## Roadmap
 
 The design, the survey of how other editors' agent plugins solved the same problems, and the open questions are recorded in the plan:
 
-https://mycelium.facile.studio/artifacts/2026-09-24-kori-nvim-a-neovim-extension-for-kori-plan-d88b22
+https://mycelium.facile.studio/artifacts/2026-09-24-bulle.nvim-a-neovim-extension-for-bulle-plan-***
 
-Next: the IDE socket in kori (`~/.kori/ide/<pid>.json` plus a unix socket, spoken by `docs/ide-protocol.md` in the kori repo) so the plugin can also send a prompt built from your selection, relay approvals, and drop the hook shim entirely. The client for it already exists in `lua/kori/ide/`, and `tests/ide.lua` drives it end to end from a fake session that speaks the protocol, up to and including the plugin's own event path and approvals. No kori release serves the socket yet, so the hook remains the working path. The remaining milestone is the two real halves meeting, not more client work.
+Next: the IDE socket in bulle (`~/.bulle/ide/<pid>.json` plus a unix socket, spoken by `docs/ide-protocol.md` in the bulle repo) so the plugin can also send a prompt built from your selection, relay approvals, and drop the hook shim entirely. The client for it already exists in `lua/bulle/ide/`, and `tests/ide.lua` drives it end to end from a fake session that speaks the protocol, up to and including the plugin's own event path and approvals. No bulle release serves the socket yet, so the hook remains the working path. The remaining milestone is the two real halves meeting, not more client work.
 
 ## Tests
 
@@ -178,8 +178,8 @@ Runs every file in `tests/`, 442 checks in total:
 
 - `run.lua` — the diff-to-line-ranges logic, the reload and stale-buffer guards, the before-hook handshake, and the shim end to end
 - `follow.lua` — every `follow = "open"` outcome: beside the pane, in its own tab, and the refusals
-- `cmdedit.lua` — the port of kori's in-place command parser, including what it refuses
-- `revert.lua` — `:KoriRevert` and its safety floor
+- `cmdedit.lua` — the port of bulle's in-place command parser, including what it refuses
+- `revert.lua` — `:BulleRevert` and its safety floor
 - `notify.lua` — the per-file notification coalescing
 - `ide.lua` — the socket client against a fake session on a `vim.uv` pipe: discovery, framing, the handshake, one of every event, the version refusal, the reconnect, and then the plugin itself driven by that fake session, including a verbatim approval surface and its fail-closed rules
 - `pane.lua` — the chat pane never takes over the buffer you are editing
@@ -187,4 +187,4 @@ Runs every file in `tests/`, 442 checks in total:
 
 ## License
 
-Apache-2.0, same as kori.
+Apache-2.0, same as bulle.
